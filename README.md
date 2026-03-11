@@ -1,6 +1,6 @@
-# HP 48 G+ Simulator
+# HP 48 G+ Simulator, Sortof
 
-A faithful simulation of the HP 48 G+ calculator, built as a self-contained HTML file that runs in any modern browser — no installation, no server, no dependencies.
+A fairly unfaithful simulation of the HP 48 G+ calculator, built as a self-contained HTML file that runs in any modern browser — no installation, no server, no dependencies.  No graphing is included in this calculator.
 
 Designed specifically for Android use with a built-in set of electrical engineering equations.
 
