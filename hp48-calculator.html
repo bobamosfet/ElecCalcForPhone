@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>HP 48 G+</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+:root {
+  --bg: #22222e; --bg2: #18181f; --scr: #152015; --scrtxt: #9cd84a; --scrdim: #3a6018;
+  --kbg: #2a2a3a; --ktop: #383848; --kenter: #12304a; --kentop: #1a4060;
+  --kop: #382216; --koptop: #4a2e1a; --kred: #4a1414; --kredtop: #5e1a1a;
+  --kshift: #3a2a00; --kshifttop: #4e3a00;
+  --amber: #e8980a; --blue: #5090d0; --txt: #dde0f0;
+}
+
+html, body {
+  height: 100%; width: 100%; background: #0e0e14;
+  display: flex; align-items: flex-start; justify-content: center;
+  font-family: 'Courier New', Courier, monospace; overflow: hidden;
+}
+
+#calc {
+  width: 100%; max-width: 400px;
+  height: 100vh; height: 100dvh;
+  background: linear-gradient(170deg, var(--bg) 0%, var(--bg2) 100%);
+  border-radius: 0;
+  display: flex; flex-direction: column;
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-left: 8px; padding-right: 8px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  box-shadow: 0 16px 48px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.07);
+  position: relative; overflow: hidden;
+}
+
+.brand { display: flex; align-items: center; justify-content: space-between; padding: 2px 6px 4px 6px; }
+.brand-hp { font-size: 20px; font-weight: 900; color: var(--amber); letter-spacing: 2px; font-style: italic; }
+.brand-model { font-size: 10px; color: #666; letter-spacing: 3px; }
+.brand-led { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+
+#screen {
+  background: var(--scr); border: 2px solid #0a120a; border-radius: 5px;
+  padding: 4px 7px; margin: 0 2px 6px 2px;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.7), 0 0 0 3px #0e0e14, 0 0 0 5px #2e2e3e;
+  min-height: 170px; display: flex; flex-direction: column;
+  position: relative; overflow: hidden; flex-shrink: 0;
+}
+#screen::after {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px);
+  pointer-events: none; z-index: 1;
+}
+
+.status-bar { display: flex; justify-content: space-between; margin-bottom: 2px; }
+.stat { font-size: 10px; color: var(--scrdim); letter-spacing: 1px; }
+.stat.on { color: var(--scrtxt); }
+.stat.shift-on { color: var(--amber); font-weight: bold; }
+
+.stack-area { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 1px; }
+.srow { display: flex; align-items: baseline; gap: 5px; min-height: 24px; }
+.slabel { font-size: 11px; color: var(--scrdim); min-width: 22px; text-align: right; }
+.sval { font-size: 18px; color: var(--scrtxt); flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 0.5px; }
+.srow.l1 .sval { font-size: 22px; font-weight: bold; }
+
+.input-line { border-top: 1px solid #1e3e1e; margin-top: 3px; padding-top: 3px; display: flex; align-items: center; min-height: 24px; }
+#inp { flex: 1; font-size: 22px; color: var(--scrtxt); text-align: right; font-family: 'Courier New', monospace; letter-spacing: 0.5px; }
+.csr { width: 9px; height: 15px; background: var(--scrtxt); animation: blink 1s step-end infinite; flex-shrink: 0; margin-left: 2px; }
+@keyframes blink { 50% { opacity: 0; } }
+
+#msg {
+  position: absolute; top: 5px; left: 5px; right: 5px;
+  background: rgba(160,40,20,0.92); color: #fff;
+  font-size: 10px; padding: 3px 8px; border-radius: 4px;
+  text-align: center; opacity: 0; transition: opacity 0.25s; z-index: 20;
+  font-family: 'Courier New', monospace; letter-spacing: 1px;
+}
+#msg.show { opacity: 1; }
+#msg.info { background: rgba(20,90,40,0.92); }
+
+/* Soft menu row */
+.softrow { display: grid; grid-template-columns: repeat(6,1fr); gap: 3px; margin: 0 2px 4px 2px; flex-shrink: 0; }
+.sk {
+  background: linear-gradient(180deg, #242434 0%, #191926 100%);
+  border: 1px solid #32324a; border-radius: 4px;
+  height: 34px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer; user-select: none;
+}
+.sk:active { filter: brightness(1.4); transform: scaleY(0.92); }
+.skL { font-size: 12px; color: var(--scrtxt); line-height: 1; }
+.skS { font-size: 8px; color: #3a8a50; line-height: 1; margin-top: 1px; }
+.sk.elec { background: linear-gradient(180deg, #132818 0%, #0d1c10 100%); border-color: #244e28; }
+.sk.radeg { background: linear-gradient(180deg, #1a1a38 0%, #101028 100%); border-color: #3a3a7a; }
+.sk.radeg .skL { color: #8080e0; }
+.sk.radeg.deg { background: linear-gradient(180deg, #2a1a00 0%, #1c1000 100%); border-color: #6a4400; }
+.sk.radeg.deg .skL { color: var(--amber); }
+
+.divr { height: 1px; background: linear-gradient(90deg, transparent, #38384e, #48486a, #38384e, transparent); margin: 2px 8px 3px; flex-shrink: 0; }
+
+/* Key grid — flex:1 so it fills remaining space */
+.kgrid {
+  display: grid;
+  grid-template-columns: repeat(6,1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 3px; padding: 0 2px; flex: 1;
+  min-height: 0;
+}
+
+.k {
+  background: linear-gradient(180deg, var(--ktop) 0%, var(--kbg) 55%);
+  border: 1px solid rgba(0,0,0,0.5); border-radius: 5px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; user-select: none;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+  position: relative; overflow: hidden;
+  padding: 1px; min-height: 0;
+}
+.k::before { content: ''; position: absolute; top:0;left:0;right:0;height:40%; background: rgba(255,255,255,0.04); border-radius:4px 4px 0 0; }
+.k:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.55); }
+
+/* Shift active glow */
+.k.shift-active { box-shadow: 0 3px 0 rgba(0,0,0,0.55), 0 0 0 1px var(--amber), inset 0 1px 0 rgba(255,255,255,0.06); }
+
+.kt { font-size: 9px; color: var(--amber); min-height: 10px; line-height: 1; }
+.km { font-size: 14px; color: var(--txt); font-weight: bold; line-height: 1.2; }
+.kb { font-size: 9px; color: var(--blue); min-height: 10px; line-height: 1; }
+
+.k.enter { background: linear-gradient(180deg, var(--kentop) 0%, var(--kenter) 55%); grid-column: span 2; }
+.k.op { background: linear-gradient(180deg, var(--koptop) 0%, var(--kop) 55%); }
+.k.red { background: linear-gradient(180deg, var(--kredtop) 0%, var(--kred) 55%); }
+.k.wide { grid-column: span 2; }
+.k.shiftkey { background: linear-gradient(180deg, var(--kshifttop) 0%, var(--kshift) 55%); border-color: rgba(232,152,10,0.3); }
+.k.shiftkey .km { color: var(--amber); }
+.k.shiftkey.shifted { background: linear-gradient(180deg, #7a5800 0%, #5a4000 55%); box-shadow: 0 3px 0 rgba(0,0,0,0.55), 0 0 6px var(--amber); }
+
+/* Equation modal */
+#eqmod {
+  display: none; position: absolute; inset: 0;
+  background: rgba(0,0,0,0.88); z-index: 100;
+  align-items: center; justify-content: center; border-radius: 16px;
+}
+#eqmod.show { display: flex; }
+.eqbox { background: #16162a; border: 1px solid #2a4a2a; border-radius: 10px; padding: 16px; width: 88%; max-width: 300px; }
+.eqtitle { font-size: 10px; color: var(--amber); letter-spacing: 2px; margin-bottom: 8px; text-align: center; }
+.eqform { font-size: 13px; color: var(--scrtxt); text-align: center; margin-bottom: 10px; }
+.eqinfo { font-size: 10px; color: #777; text-align: center; line-height: 1.7; margin-bottom: 10px; }
+.eqinfo b { color: var(--scrtxt); }
+.eqresult { font-size: 20px; color: var(--amber); text-align: center; font-weight: bold; min-height: 28px; margin-bottom: 12px; }
+.eqbtn { display: block; width: 100%; background: var(--kenter); border: 1px solid #204a6a; border-radius: 5px; color: #cce0f0; font-family: 'Courier New', monospace; font-size: 11px; padding: 9px; cursor: pointer; letter-spacing: 1px; }
+.eqbtn:active { filter: brightness(1.3); }
+
+/* Variable panel */
+#varpanel {
+  display: none; position: absolute; inset: 0;
+  background: rgba(0,0,0,0.88); z-index: 100;
+  align-items: flex-end; justify-content: center; border-radius: 16px;
+}
+#varpanel.show { display: flex; }
+.varbox { background: #16162a; border: 1px solid #2a2a50; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 14px; width: 100%; max-height: 65%; overflow-y: auto; }
+.vartitle { font-size: 10px; color: var(--amber); letter-spacing: 2px; margin-bottom: 10px; text-align: center; }
+.varinrow { display: flex; gap: 5px; margin-bottom: 8px; }
+.varinput { background: #0e0e1e; border: 1px solid #32325a; border-radius: 4px; color: var(--amber); font-family: 'Courier New', monospace; font-size: 13px; padding: 6px 8px; width: 75px; text-transform: uppercase; letter-spacing: 2px; }
+.varinput:focus { outline: none; border-color: #5050a0; }
+.varbtn { flex: 1; background: #122212; border: 1px solid #224422; color: #80d880; font-family: 'Courier New', monospace; font-size: 10px; padding: 6px 3px; border-radius: 4px; cursor: pointer; }
+.varbtn.rcl { background: var(--kenter); border-color: #1a3a5a; color: #a0d0f0; }
+.varlist { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; min-height: 20px; }
+.varitem { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #0e0e1e; border-radius: 4px; border: 1px solid #22223a; cursor: pointer; }
+.varitem:active { background: #1a2a3a; }
+.vname { font-size: 11px; color: var(--amber); min-width: 45px; font-family: 'Courier New', monospace; }
+.vval { font-size: 11px; color: var(--scrtxt); flex: 1; font-family: 'Courier New', monospace; overflow: hidden; text-overflow: ellipsis; }
+.vdel { font-size: 11px; color: #444; cursor: pointer; padding: 0 2px; }
+.varcls { display: block; width: 100%; background: #1e1e1e; border: 1px solid #333; color: #666; font-family: 'Courier New', monospace; font-size: 11px; padding: 8px; border-radius: 5px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="calc">
+  <div class="brand">
+    <span class="brand-hp">HP</span>
+    <span class="brand-model">48 G+</span>
+    <span class="brand-led"></span>
+  </div>
+
+  <div id="screen">
+    <div id="msg"></div>
+    <div class="status-bar">
+      <span class="stat on">RAD</span>
+      <span class="stat on">RPN</span>
+      <span class="stat" id="stat-shf">SHF</span>
+      <span class="stat on">ALG</span>
+    </div>
+    <div class="stack-area">
+      <div class="srow"><span class="slabel">4:</span><span class="sval" id="s4"></span></div>
+      <div class="srow"><span class="slabel">3:</span><span class="sval" id="s3"></span></div>
+      <div class="srow"><span class="slabel">2:</span><span class="sval" id="s2"></span></div>
+      <div class="srow l1"><span class="slabel">1:</span><span class="sval" id="s1"></span></div>
+    </div>
+    <div class="input-line">
+      <div id="inp"></div>
+      <div class="csr" id="csr"></div>
+    </div>
+  </div>
+
+  <!-- Soft keys -->
+  <div class="softrow">
+    <div class="sk elec" onclick="calcXc()"><div class="skL">Xc</div><div class="skS">1/2&#960;fC</div></div>
+    <div class="sk elec" onclick="calcXL()"><div class="skL">XL</div><div class="skS">2&#960;fL</div></div>
+    <div class="sk elec" onclick="calcFC()"><div class="skL">fc</div><div class="skS">1/2&#960;RC</div></div>
+    <div class="sk elec" onclick="calcPar()"><div class="skL">R&#8214;</div><div class="skS">PAR</div></div>
+    <div class="sk elec" onclick="calcLC()"><div class="skL">LC</div><div class="skS">1/2&#960;&#8730;LC</div></div>
+    <div class="sk radeg" id="sk-radeg" onclick="toggleDeg()"><div class="skL" id="sk-radeg-lbl">RAD</div></div>
+  </div>
+  <div class="softrow" style="margin-top:0">
+    <div class="sk" onclick="openVar('sto')" style="grid-column:span 3"><div class="skL">STO &rarr;</div></div>
+    <div class="sk" onclick="openVar('rcl')" style="grid-column:span 3"><div class="skL">&larr; RCL</div></div>
+  </div>
+
+  <div class="divr"></div>
+
+  <!-- Key grid -->
+  <div class="kgrid">
+
+    <!-- Row 1: scientific functions. Top label = SHIFT function -->
+    <div class="k" id="k-sqrt" onclick="pk('sqrt')"><div class="kt">x&#178;</div><div class="km">&#8730;x</div><div class="kb"></div></div>
+    <div class="k" id="k-log"  onclick="pk('log')"> <div class="kt">10^x</div><div class="km">LOG</div><div class="kb"></div></div>
+    <div class="k" id="k-ln"   onclick="pk('ln')">  <div class="kt">e^x</div><div class="km">LN</div><div class="kb"></div></div>
+    <div class="k" id="k-sin"  onclick="pk('sin')"> <div class="kt">ASIN</div><div class="km">SIN</div><div class="kb"></div></div>
+    <div class="k" id="k-cos"  onclick="pk('cos')"> <div class="kt">ACOS</div><div class="km">COS</div><div class="kb"></div></div>
+    <div class="k" id="k-tan"  onclick="pk('tan')"> <div class="kt">ATAN</div><div class="km">TAN</div><div class="kb"></div></div>
+
+    <!-- Row 2: utility -->
+    <div class="k" id="k-inv"  onclick="pk('inv')"> <div class="kt">y^x</div><div class="km">1/x</div><div class="kb"></div></div>
+    <div class="k" id="k-pi"   onclick="pk('pi')">  <div class="kt">&#8747;</div><div class="km">&#960;</div><div class="kb"></div></div>
+    <div class="k" id="k-swap" onclick="pk('swap')"><div class="kt">OVER</div><div class="km">SWAP</div><div class="kb"></div></div>
+    <div class="k" id="k-chs"  onclick="pk('chs')"> <div class="kt">ABS</div><div class="km">+/-</div><div class="kb"></div></div>
+    <div class="k" id="k-eex"  onclick="pk('eex')"> <div class="kt">ENG</div><div class="km">EEX</div><div class="kb"></div></div>
+    <div class="k red" id="k-drop" onclick="pk('drop')"><div class="kt">CLR</div><div class="km">DROP</div><div class="kb"></div></div>
+
+    <!-- Row 3: 7 8 9 / * DUP -->
+    <div class="k" onclick="pd('7')"><div class="kt"></div><div class="km">7</div><div class="kb"></div></div>
+    <div class="k" onclick="pd('8')"><div class="kt"></div><div class="km">8</div><div class="kb"></div></div>
+    <div class="k" onclick="pd('9')"><div class="kt"></div><div class="km">9</div><div class="kb"></div></div>
+    <div class="k op" onclick="pk('div')"><div class="kt"></div><div class="km" style="font-size:18px">&#247;</div><div class="kb"></div></div>
+    <div class="k op" onclick="pk('mul')"><div class="kt"></div><div class="km" style="font-size:18px">&#215;</div><div class="kb"></div></div>
+    <div class="k" onclick="pk('dup')"><div class="kt">DUPN</div><div class="km">DUP</div><div class="kb">PICK</div></div>
+
+    <!-- Row 4: 4 5 6 - + ROLL | SHIFT key replaces ROLL in shift mode -->
+    <div class="k" onclick="pd('4')"><div class="kt"></div><div class="km">4</div><div class="kb"></div></div>
+    <div class="k" onclick="pd('5')"><div class="kt"></div><div class="km">5</div><div class="kb"></div></div>
+    <div class="k" onclick="pd('6')"><div class="kt"></div><div class="km">6</div><div class="kb"></div></div>
+    <div class="k op" onclick="pk('sub')"><div class="kt"></div><div class="km" style="font-size:19px">&#8722;</div><div class="kb"></div></div>
+    <div class="k op" onclick="pk('add')"><div class="kt"></div><div class="km" style="font-size:19px">+</div><div class="kb"></div></div>
+    <div class="k shiftkey" id="shiftbtn" onclick="toggleShift()"><div class="kt"></div><div class="km">SHIFT</div><div class="kb"></div></div>
+
+    <!-- Row 5: 1 2 3 ENTER(spans 2 rows) -->
+    <div class="k" onclick="pd('1')"><div class="kt"></div><div class="km">1</div><div class="kb"></div></div>
+    <div class="k" onclick="pd('2')"><div class="kt"></div><div class="km">2</div><div class="kb"></div></div>
+    <div class="k" onclick="pd('3')"><div class="kt"></div><div class="km">3</div><div class="kb"></div></div>
+    <div class="k enter" onclick="pk('enter')" style="grid-row: span 2; min-height: auto;">
+      <div class="kt"></div><div class="km" style="font-size:12px;letter-spacing:1px">ENTER</div><div class="kb"></div>
+    </div>
+
+    <!-- Row 6: 0(wide) . BKSP -->
+    <div class="k wide" onclick="pd('0')"><div class="kt"></div><div class="km">0</div><div class="kb"></div></div>
+    <div class="k" onclick="pd('.')"><div class="kt"></div><div class="km">.</div><div class="kb"></div></div>
+    <div class="k red" onclick="pk('bksp')"><div class="kt">CNCL</div><div class="km">&#9003;</div><div class="kb"></div></div>
+
+  </div>
+
+  <!-- Equation modal -->
+  <div id="eqmod">
+    <div class="eqbox">
+      <div class="eqtitle" id="eqtitle"></div>
+      <div class="eqform" id="eqform"></div>
+      <div class="eqinfo" id="eqinfo"></div>
+      <div class="eqresult" id="eqresult"></div>
+      <button class="eqbtn" id="eqbtn" onclick="closeEq()"></button>
+    </div>
+  </div>
+
+  <!-- Variable panel -->
+  <div id="varpanel">
+    <div class="varbox">
+      <div class="vartitle" id="vartitle"></div>
+      <div class="varinrow">
+        <input class="varinput" id="varname" maxlength="6" placeholder="NAME">
+        <button class="varbtn" id="stobtn" onclick="doSto()">STO &rarr;</button>
+        <button class="varbtn rcl" id="rclbtn" onclick="doRcl()">&larr; RCL</button>
+      </div>
+      <div class="varlist" id="varlist"></div>
+      <button class="varcls" onclick="closeVar()">&#9660; CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var stk = [];
+var buf = '';
+var eex = false;
+var shifted = false;
+var pendVal = null;
+var varMode = 'sto';
+var vars = {};
+var degMode = false;
+
+// Keys that have a shift function: key-id -> [normal-fn, shift-fn, shift-label]
+var shiftMap = {
+  'k-sqrt': ['sqrt', 'sq',   'x\u00b2'],
+  'k-log':  ['log',  'pow10','10^x'],
+  'k-ln':   ['ln',   'exp',  'e^x'],
+  'k-sin':  ['sin',  'asin', 'ASIN'],
+  'k-cos':  ['cos',  'acos', 'ACOS'],
+  'k-tan':  ['tan',  'atan', 'ATAN'],
+  'k-inv':  ['inv',  'pow',  'y^x'],
+  'k-pi':   ['pi',   'intg', '\u222b'],
+  'k-swap': ['swap', 'over', 'OVER'],
+  'k-chs':  ['chs',  'abs',  'ABS'],
+  'k-eex':  ['eex',  'eng',  'ENG'],
+  'k-drop': ['drop', 'clrstk','CLR'],
+};
+
+function fmt(n) {
+  if (!isFinite(n)) return n > 0 ? '+Inf' : '-Inf';
+  if (isNaN(n)) return 'NaN';
+  var a = Math.abs(n);
+  if (a === 0) return '0';
+  if (a >= 1e-4 && a < 1e12) return String(parseFloat(n.toPrecision(10)));
+  return n.toExponential(6).replace(/e\+?(-?)0*(\d+)/, 'E$1$2');
+}
+
+function render() {
+  var ids = ['s1','s2','s3','s4'];
+  for (var i = 0; i < 4; i++) {
+    var v = stk[stk.length - 1 - i];
+    document.getElementById(ids[i]).textContent = (v !== undefined) ? fmt(v) : '';
+  }
+  document.getElementById('inp').textContent = buf;
+  document.getElementById('csr').style.display = buf !== '' ? 'none' : 'block';
+}
+
+function toast(msg, type) {
+  var el = document.getElementById('msg');
+  el.textContent = msg;
+  el.className = (type === 'info') ? 'show info' : 'show';
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.className = ''; }, 1800);
+}
+
+function pushBuf() {
+  if (buf === '' || buf === '-') return false;
+  var v = parseFloat(buf);
+  if (isNaN(v)) { toast('BAD NUMBER'); buf = ''; return false; }
+  stk.push(v); buf = ''; eex = false; return true;
+}
+
+function need(n) {
+  if (stk.length < n) { toast('TOO FEW ARGS'); return false; }
+  return true;
+}
+
+// ── SHIFT toggle ───────────────────────────────────────
+function toggleShift() {
+  shifted = !shifted;
+  var btn = document.getElementById('shiftbtn');
+  btn.className = shifted ? 'k shiftkey shifted' : 'k shiftkey';
+  var statEl = document.getElementById('stat-shf');
+  statEl.className = shifted ? 'stat shift-on' : 'stat';
+
+  // Highlight keys that have shift functions
+  for (var id in shiftMap) {
+    var el = document.getElementById(id);
+    if (!el) continue;
+    if (shifted) {
+      el.classList.add('shift-active');
+      // Swap the displayed main label to the shift label
+      el.querySelector('.km').setAttribute('data-orig', el.querySelector('.km').textContent);
+      el.querySelector('.km').textContent = shiftMap[id][2];
+      el.querySelector('.km').style.color = 'var(--amber)';
+    } else {
+      el.classList.remove('shift-active');
+      var orig = el.querySelector('.km').getAttribute('data-orig');
+      if (orig) el.querySelector('.km').textContent = orig;
+      el.querySelector('.km').style.color = '';
+    }
+  }
+}
+
+// ── Digit input ────────────────────────────────────────
+function pd(d) {
+  if (shifted) { toggleShift(); } // digits cancel shift
+  if (d === '.' && buf.replace(/E.*/,'').indexOf('.') !== -1) return;
+  if (d === '.' && eex) return;
+  if (eex) {
+    var ei = buf.lastIndexOf('E');
+    if (ei !== -1 && buf.slice(ei+1).replace('-','').length >= 3) return;
+  }
+  if (!eex && buf === '0' && d !== '.') buf = d;
+  else buf += d;
+  render();
+}
+
+// ── Main key handler ───────────────────────────────────
+function pk(k) {
+  // If shift is on, remap key
+  if (shifted) {
+    for (var id in shiftMap) {
+      if (shiftMap[id][0] === k) { k = shiftMap[id][1]; break; }
+    }
+    toggleShift();
+  }
+
+  switch(k) {
+    case 'enter':
+      if (buf !== '') pushBuf();
+      else if (stk.length > 0) stk.push(stk[stk.length-1]);
+      break;
+    case 'bksp':
+      if (buf.length > 0) {
+        buf = buf.slice(0,-1);
+        if (/E-?$/.test(buf)) buf = buf.replace(/E-?$/,'');
+        eex = buf.indexOf('E') !== -1;
+      } else if (stk.length > 0) stk.pop();
+      break;
+    case 'drop':  if (buf !== '') { buf = ''; eex = false; } else if (stk.length > 0) stk.pop(); break;
+    case 'clrstk': stk = []; buf = ''; eex = false; toast('STACK CLEARED','info'); break;
+    case 'dup':   if (buf !== '') pushBuf(); if (need(1)) stk.push(stk[stk.length-1]); break;
+    case 'swap':  if (buf !== '') pushBuf(); if (need(2)) { var a=stk.pop(),b=stk.pop(); stk.push(a); stk.push(b); } break;
+    case 'over':  if (buf !== '') pushBuf(); if (need(2)) stk.push(stk[stk.length-2]); break;
+    case 'roll':  if (buf !== '') pushBuf(); if (need(2)) { var x=stk.shift(); stk.push(x); } break;
+    case 'add':   bop(function(a,b){return a+b;}); break;
+    case 'sub':   bop(function(a,b){return a-b;}); break;
+    case 'mul':   bop(function(a,b){return a*b;}); break;
+    case 'div':   bop(function(a,b){ if(b===0){toast('DIV BY ZERO');return null;} return a/b; }); break;
+    case 'pow':   bop(function(a,b){ return Math.pow(a,b); }); break;
+    case 'sqrt':  uop(function(x){ if(x<0){toast('NEG SQRT');return null;} return Math.sqrt(x); }); break;
+    case 'sq':    uop(function(x){ return x*x; }); break;
+    case 'log':   uop(function(x){ if(x<=0){toast('DOMAIN ERR');return null;} return Math.log10(x); }); break;
+    case 'pow10': uop(function(x){ return Math.pow(10,x); }); break;
+    case 'ln':    uop(function(x){ if(x<=0){toast('DOMAIN ERR');return null;} return Math.log(x); }); break;
+    case 'exp':   uop(function(x){ return Math.exp(x); }); break;
+    case 'sin':   uop(function(x){ return Math.sin(degMode ? x*Math.PI/180 : x); }); break;
+    case 'asin':  uop(function(x){ if(x<-1||x>1){toast('DOMAIN ERR');return null;} var r=Math.asin(x); return degMode?r*180/Math.PI:r; }); break;
+    case 'cos':   uop(function(x){ return Math.cos(degMode ? x*Math.PI/180 : x); }); break;
+    case 'acos':  uop(function(x){ if(x<-1||x>1){toast('DOMAIN ERR');return null;} var r=Math.acos(x); return degMode?r*180/Math.PI:r; }); break;
+    case 'tan':   uop(function(x){ return Math.tan(degMode ? x*Math.PI/180 : x); }); break;
+    case 'atan':  uop(function(x){ var r=Math.atan(x); return degMode?r*180/Math.PI:r; }); break;
+    case 'inv':   uop(function(x){ if(x===0){toast('DIV BY ZERO');return null;} return 1/x; }); break;
+    case 'abs':   uop(Math.abs); break;
+    case 'intg':  uop(Math.floor); break;
+    case 'pi':    if (buf !== '') pushBuf(); stk.push(Math.PI); break;
+    case 'chs':
+      if (buf !== '') {
+        if (eex) {
+          // Toggle sign on the exponent, not the mantissa
+          var ei = buf.lastIndexOf('E');
+          var exp = buf.slice(ei + 1);
+          buf = buf.slice(0, ei + 1) + (exp.charAt(0) === '-' ? exp.slice(1) : '-' + exp);
+        } else {
+          buf = buf.charAt(0) === '-' ? buf.slice(1) : '-' + buf;
+        }
+      } else if (stk.length > 0) stk[stk.length-1] *= -1;
+      break;
+    case 'eex':
+      if (buf === '' || buf === '-') buf = buf + '1';
+      if (buf.indexOf('E') === -1) { buf += 'E'; eex = true; }
+      break;
+    case 'eng': // toggle ENG display - just a toast for now
+      toast('ENG MODE N/A','info'); break;
+  }
+  render();
+}
+
+function bop(fn) {
+  if (buf !== '') pushBuf();
+  if (!need(2)) return;
+  var b=stk.pop(), a=stk.pop(), r=fn(a,b);
+  if (r === null) { stk.push(a); stk.push(b); return; }
+  stk.push(r);
+}
+
+function uop(fn) {
+  if (buf !== '') pushBuf();
+  if (!need(1)) return;
+  var a=stk.pop(), r=fn(a);
+  if (r === null) { stk.push(a); return; }
+  stk.push(r);
+}
+
+// ── Equation modal ─────────────────────────────────────
+function showEq(title, formula, info, result) {
+  document.getElementById('eqtitle').textContent = title;
+  document.getElementById('eqform').textContent = formula;
+  document.getElementById('eqinfo').innerHTML = info;
+  pendVal = (result !== null && isFinite(result)) ? result : null;
+  document.getElementById('eqresult').textContent = pendVal !== null ? '= ' + fmt(pendVal) : 'ERROR';
+  document.getElementById('eqbtn').textContent = pendVal !== null ? 'PUSH TO STACK' : 'CLOSE';
+  document.getElementById('eqmod').className = 'show';
+}
+
+function closeEq() {
+  document.getElementById('eqmod').className = '';
+  if (pendVal !== null) { stk.push(pendVal); pendVal = null; }
+  render();
+}
+
+// ── Electrical equations ───────────────────────────────
+function calcXc() {
+  if (buf !== '') pushBuf();
+  if (!need(2)) return;
+  var C=stk[stk.length-1], f=stk[stk.length-2];
+  if (f<=0||C<=0) { showEq('CAPACITIVE REACTANCE','Xc = 1/(2\u03c0fC)','<b>Error:</b> f and C must be &gt; 0',null); return; }
+  stk.pop(); stk.pop(); render();
+  showEq('CAPACITIVE REACTANCE','Xc = 1 / (2\u03c0 \u00d7 f \u00d7 C)',
+    'Level 2 (f): <b>'+fmt(f)+' Hz</b><br>Level 1 (C): <b>'+fmt(C)+' F</b>',
+    1/(2*Math.PI*f*C));
+}
+
+function calcXL() {
+  if (buf !== '') pushBuf();
+  if (!need(2)) return;
+  var L=stk[stk.length-1], f=stk[stk.length-2];
+  if (f<0||L<0) { showEq('INDUCTIVE REACTANCE','XL = 2\u03c0fL','<b>Error:</b> f and L must be \u2265 0',null); return; }
+  stk.pop(); stk.pop(); render();
+  showEq('INDUCTIVE REACTANCE','XL = 2\u03c0 \u00d7 f \u00d7 L',
+    'Level 2 (f): <b>'+fmt(f)+' Hz</b><br>Level 1 (L): <b>'+fmt(L)+' H</b>',
+    2*Math.PI*f*L);
+}
+
+function calcFC() {
+  if (buf !== '') pushBuf();
+  if (!need(2)) return;
+  var C=stk[stk.length-1], R=stk[stk.length-2];
+  if (R<=0||C<=0) { showEq('RC CUTOFF FREQ','fc = 1/(2\u03c0RC)','<b>Error:</b> R and C must be &gt; 0',null); return; }
+  stk.pop(); stk.pop(); render();
+  showEq('RC CUTOFF FREQUENCY','fc = 1 / (2\u03c0 \u00d7 R \u00d7 C)',
+    'Level 2 (R): <b>'+fmt(R)+' \u03a9</b><br>Level 1 (C): <b>'+fmt(C)+' F</b>',
+    1/(2*Math.PI*R*C));
+}
+
+function calcPar() {
+  if (buf !== '') pushBuf();
+  if (!need(2)) return;
+  var R2=stk[stk.length-1], R1=stk[stk.length-2];
+  if (R1<=0||R2<=0) { showEq('PARALLEL RESISTORS','R\u2016 = R1R2/(R1+R2)','<b>Error:</b> both R must be &gt; 0',null); return; }
+  stk.pop(); stk.pop(); render();
+  showEq('PARALLEL RESISTORS','R\u2016 = (R1 \u00d7 R2) / (R1 + R2)',
+    'Level 2 (R1): <b>'+fmt(R1)+' \u03a9</b><br>Level 1 (R2): <b>'+fmt(R2)+' \u03a9</b>',
+    (R1*R2)/(R1+R2));
+}
+
+// ── Variable storage ───────────────────────────────────
+function openVar(mode) {
+  varMode = mode;
+  document.getElementById('vartitle').textContent = mode==='sto' ? 'STORE VARIABLE' : 'RECALL VARIABLE';
+  document.getElementById('stobtn').style.display = mode==='sto' ? '' : 'none';
+  document.getElementById('rclbtn').style.display = mode==='rcl' ? '' : 'none';
+  renderVars();
+  document.getElementById('varpanel').className = 'show';
+}
+
+function closeVar() { document.getElementById('varpanel').className = ''; render(); }
+
+function renderVars() {
+  var list = document.getElementById('varlist');
+  var keys = Object.keys(vars);
+  if (!keys.length) {
+    list.innerHTML = '<div style="color:#444;font-size:10px;text-align:center">No variables stored</div>';
+    return;
+  }
+  list.innerHTML = keys.map(function(n) {
+    return '<div class="varitem" onclick="clickVar(\''+n+'\')">'
+      +'<span class="vname">'+n+'</span>'
+      +'<span class="vval">'+fmt(vars[n])+'</span>'
+      +'<span class="vdel" onclick="event.stopPropagation();delVar(\''+n+'\')">&#10005;</span>'
+      +'</div>';
+  }).join('');
+}
+
+function doSto() {
+  if (buf !== '') pushBuf();
+  var name = document.getElementById('varname').value.trim().toUpperCase();
+  if (!name) { toast('ENTER A NAME'); return; }
+  if (!need(1)) return;
+  vars[name] = stk[stk.length-1];
+  toast('STORED \u2192 ' + name, 'info');
+  document.getElementById('varname').value = '';
+  renderVars();
+}
+
+function doRcl() {
+  var name = document.getElementById('varname').value.trim().toUpperCase();
+  if (!name) { toast('ENTER A NAME'); return; }
+  if (!(name in vars)) { toast(name + ' NOT FOUND'); return; }
+  stk.push(vars[name]);
+  toast('RECALLED ' + name, 'info');
+  closeVar();
+}
+
+function clickVar(name) {
+  if (varMode === 'rcl') { stk.push(vars[name]); toast('RECALLED '+name,'info'); closeVar(); }
+  else document.getElementById('varname').value = name;
+}
+
+function delVar(name) { delete vars[name]; renderVars(); }
+
+// ── RAD/DEG toggle ────────────────────────────────────
+function toggleDeg() {
+  degMode = !degMode;
+  var btn = document.getElementById('sk-radeg');
+  var lbl = document.getElementById('sk-radeg-lbl');
+  if (degMode) {
+    btn.className = 'sk radeg deg';
+    lbl.textContent = 'DEG';
+    document.querySelector('.stat.on').textContent = 'DEG';
+  } else {
+    btn.className = 'sk radeg';
+    lbl.textContent = 'RAD';
+    document.querySelector('.stat').textContent = 'RAD';
+  }
+  // Update status bar RAD/DEG label
+  var stats = document.querySelectorAll('.stat');
+  stats[0].textContent = degMode ? 'DEG' : 'RAD';
+  toast(degMode ? 'DEGREES MODE' : 'RADIANS MODE', 'info');
+}
+
+// ── LC resonance ───────────────────────────────────────
+function calcLC() {
+  if (buf !== '') pushBuf();
+  if (!need(2)) return;
+  var C=stk[stk.length-1], L=stk[stk.length-2];
+  if (L<=0||C<=0) { showEq('LC RESONANCE','f = 1/(2π√(LC))','<b>Error:</b> L and C must be &gt; 0',null); return; }
+  stk.pop(); stk.pop(); render();
+  showEq('LC RESONANCE FREQUENCY','f = 1 / (2π × √(L × C))',
+    'Level 2 (L): <b>'+fmt(L)+' H</b><br>Level 1 (C): <b>'+fmt(C)+' F</b>',
+    1/(2*Math.PI*Math.sqrt(L*C)));
+}
+
+// ── Keyboard support ───────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('varpanel').className) return;
+  if (document.getElementById('eqmod').className) {
+    if (e.key==='Enter'||e.key==='Escape') closeEq(); return;
+  }
+  var k = e.key;
+  if (k>='0'&&k<='9') pd(k);
+  else if (k==='.') pd('.');
+  else if (k==='Enter') pk('enter');
+  else if (k==='Backspace') pk('bksp');
+  else if (k==='+') pk('add');
+  else if (k==='-') pk('sub');
+  else if (k==='*') pk('mul');
+  else if (k==='/') pk('div');
+  else if (k.toLowerCase()==='e') pk('eex');
+  else if (k==='n') pk('chs');
+  else if (k==='s') pk('swap');
+  else if (k==='d') pk('drop');
+  else return;
+  e.preventDefault();
+});
+
+render();
+</script>
+</body>
+</html>
