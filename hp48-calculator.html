@@ -101,13 +101,19 @@ html, body {
 .divr { height: 1px; background: linear-gradient(90deg, transparent, #38384e, #48486a, #38384e, transparent); margin: 2px 8px 3px; flex-shrink: 0; }
 
 /* Key grid — flex:1 so it fills remaining space */
-.kgrid {
-  display: grid;
-  grid-template-columns: repeat(6,1fr);
-  grid-template-rows: repeat(5, 1fr);
-  gap: 3px; padding: 0 2px; flex: 1;
-  min-height: 0;
+.kgrid-fn {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 3px; padding: 0 2px; flex-shrink: 0;
 }
+.kgrid-num {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 3px; padding: 0 2px; flex: 1; min-height: 0;
+}
+.kgrid-bot {
+  display: grid; grid-template-columns: repeat(6,1fr);
+  gap: 3px; padding: 0 2px; flex-shrink: 0;
+}
+.kgrid-bot .k { min-height: 48px; }
 
 .k {
   background: linear-gradient(180deg, var(--ktop) 0%, var(--kbg) 55%);
@@ -120,18 +126,20 @@ html, body {
 }
 .k::before { content: ''; position: absolute; top:0;left:0;right:0;height:40%; background: rgba(255,255,255,0.04); border-radius:4px 4px 0 0; }
 .k:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.55); }
+.k.flash { background: linear-gradient(180deg, #a0a060 0%, #707040 55%) !important; }
+.sk.flash { background: rgba(160,200,80,0.35) !important; }
 
 /* Shift active glow */
 .k.shift-active { box-shadow: 0 3px 0 rgba(0,0,0,0.55), 0 0 0 1px var(--amber), inset 0 1px 0 rgba(255,255,255,0.06); }
 
-.kt { font-size: 9px; color: var(--amber); min-height: 10px; line-height: 1; }
-.km { font-size: 14px; color: var(--txt); font-weight: bold; line-height: 1.2; }
-.kb { font-size: 9px; color: var(--blue); min-height: 10px; line-height: 1; }
+.kt { font-size: 11px; color: var(--amber); min-height: 12px; line-height: 1; }
+.km { font-size: 17px; color: var(--txt); font-weight: bold; line-height: 1.2; }
+.kb { font-size: 11px; color: var(--blue); min-height: 12px; line-height: 1; }
 
 .k.enter { background: linear-gradient(180deg, var(--kentop) 0%, var(--kenter) 55%); grid-column: span 2; }
 .k.op { background: linear-gradient(180deg, var(--koptop) 0%, var(--kop) 55%); }
 .k.red { background: linear-gradient(180deg, var(--kredtop) 0%, var(--kred) 55%); }
-.k.wide { grid-column: span 2; }
+.k.wide { grid-column: span 2; } /* 0 key spans 2 of 5 cols */
 .k.shiftkey { background: linear-gradient(180deg, var(--kshifttop) 0%, var(--kshift) 55%); border-color: rgba(232,152,10,0.3); }
 .k.shiftkey .km { color: var(--amber); }
 .k.shiftkey.shifted { background: linear-gradient(180deg, #7a5800 0%, #5a4000 55%); box-shadow: 0 3px 0 rgba(0,0,0,0.55), 0 0 6px var(--amber); }
@@ -205,68 +213,77 @@ html, body {
 
   <!-- Soft keys -->
   <div class="softrow">
-    <div class="sk elec" onclick="calcXc()"><div class="skL">Xc</div><div class="skS">1/2&#960;fC</div></div>
-    <div class="sk elec" onclick="calcXL()"><div class="skL">XL</div><div class="skS">2&#960;fL</div></div>
-    <div class="sk elec" onclick="calcFC()"><div class="skL">fc</div><div class="skS">1/2&#960;RC</div></div>
-    <div class="sk elec" onclick="calcPar()"><div class="skL">R&#8214;</div><div class="skS">PAR</div></div>
-    <div class="sk elec" onclick="calcLC()"><div class="skL">LC</div><div class="skS">1/2&#960;&#8730;LC</div></div>
-    <div class="sk radeg" id="sk-radeg" onclick="toggleDeg()"><div class="skL" id="sk-radeg-lbl">RAD</div></div>
-  </div>
-  <div class="softrow" style="margin-top:0">
-    <div class="sk" onclick="openVar('sto')" style="grid-column:span 3"><div class="skL">STO &rarr;</div></div>
-    <div class="sk" onclick="openVar('rcl')" style="grid-column:span 3"><div class="skL">&larr; RCL</div></div>
+    <div class="sk elec" onclick="vibro(this);calcXc()"><div class="skL">Xc</div><div class="skS">1/2&#960;fC</div></div>
+    <div class="sk elec" onclick="vibro(this);calcXL()"><div class="skL">XL</div><div class="skS">2&#960;fL</div></div>
+    <div class="sk elec" onclick="vibro(this);calcFC()"><div class="skL">fc</div><div class="skS">1/2&#960;RC</div></div>
+    <div class="sk elec" onclick="vibro(this);calcPar()"><div class="skL">R&#8214;</div><div class="skS">PAR</div></div>
+    <div class="sk elec" onclick="vibro(this);calcLC()"><div class="skL">LC</div><div class="skS">1/2&#960;&#8730;LC</div></div>
+    <div class="sk radeg" id="sk-radeg" onclick="vibro(this);toggleDeg()"><div class="skL" id="sk-radeg-lbl">RAD</div></div>
   </div>
 
-  <div class="divr"></div>
 
-  <!-- Key grid -->
-  <div class="kgrid">
+  <!-- Function rows (4-col x3) -->
+  <div class="kgrid-fn">
+    <!-- Row 1 -->
+    <div class="k" id="k-sqrt" onclick="pk('sqrt')"><div class="kt">x&#178;</div><div class="km">&#8730;x</div></div>
+    <div class="k" id="k-log"  onclick="pk('log')"><div class="kt">10^x</div><div class="km">LOG</div></div>
+    <div class="k" id="k-ln"   onclick="pk('ln')"><div class="kt">e^x</div><div class="km">LN</div></div>
+    <div class="k" id="k-yroot" onclick="pk('yroot')"><div class="kt">y^x</div><div class="km"><sup style="font-size:9px">x</sup>&#8730;y</div></div>
+    <!-- Row 2 -->
+    <div class="k" id="k-sin"  onclick="pk('sin')"><div class="kt">ASIN</div><div class="km">SIN</div></div>
+    <div class="k" id="k-cos"  onclick="pk('cos')"><div class="kt">ACOS</div><div class="km">COS</div></div>
+    <div class="k" id="k-tan"  onclick="pk('tan')"><div class="kt">ATAN</div><div class="km">TAN</div></div>
+    <div class="k" id="k-pi"   onclick="pk('pi')"><div class="km">&#960;</div></div>
+    <!-- Row 3 -->
+    <div class="k" id="k-inv"  onclick="pk('inv')"><div class="kt">1/x</div><div class="km">x&#8315;&#185;</div></div>
+    <div class="k" id="k-swap" onclick="pk('swap')"><div class="kt">OVER</div><div class="km">SWAP</div></div>
+    <div class="k" id="k-chs"  onclick="pk('chs')"><div class="kt">ABS</div><div class="km">+/-</div></div>
+    <div class="k" id="k-eex"  onclick="pk('eex')"><div class="kt">ENG</div><div class="km">EEX</div></div>
+  </div>
 
-    <!-- Row 1: scientific functions. Top label = SHIFT function -->
-    <div class="k" id="k-sqrt" onclick="pk('sqrt')"><div class="kt">x&#178;</div><div class="km">&#8730;x</div><div class="kb"></div></div>
-    <div class="k" id="k-log"  onclick="pk('log')"> <div class="kt">10^x</div><div class="km">LOG</div><div class="kb"></div></div>
-    <div class="k" id="k-ln"   onclick="pk('ln')">  <div class="kt">e^x</div><div class="km">LN</div><div class="kb"></div></div>
-    <div class="k" id="k-sin"  onclick="pk('sin')"> <div class="kt">ASIN</div><div class="km">SIN</div><div class="kb"></div></div>
-    <div class="k" id="k-cos"  onclick="pk('cos')"> <div class="kt">ACOS</div><div class="km">COS</div><div class="kb"></div></div>
-    <div class="k" id="k-tan"  onclick="pk('tan')"> <div class="kt">ATAN</div><div class="km">TAN</div><div class="kb"></div></div>
+  <div class="divr" style="margin:3px 8px"></div>
 
-    <!-- Row 2: utility -->
-    <div class="k" id="k-inv"  onclick="pk('inv')"> <div class="kt">y^x</div><div class="km">1/x</div><div class="kb"></div></div>
-    <div class="k" id="k-pi"   onclick="pk('pi')">  <div class="kt">&#8747;</div><div class="km">&#960;</div><div class="kb"></div></div>
-    <div class="k" id="k-swap" onclick="pk('swap')"><div class="kt">OVER</div><div class="km">SWAP</div><div class="kb"></div></div>
-    <div class="k" id="k-chs"  onclick="pk('chs')"> <div class="kt">ABS</div><div class="km">+/-</div><div class="kb"></div></div>
-    <div class="k" id="k-eex"  onclick="pk('eex')"> <div class="kt">ENG</div><div class="km">EEX</div><div class="kb"></div></div>
-    <div class="k red" id="k-drop" onclick="pk('drop')"><div class="kt">CLR</div><div class="km">DROP</div><div class="kb"></div></div>
+  <!-- Number pad (4-col) -->
+  <div class="kgrid-num">
+    <div class="k" onclick="pd('7')"><div class="km">7</div></div>
+    <div class="k" onclick="pd('8')"><div class="km">8</div></div>
+    <div class="k" onclick="pd('9')"><div class="km">9</div></div>
+    <div class="k op" onclick="pk('div')"><div class="km" style="font-size:28px">&#247;</div></div>
+    <div class="k" onclick="pd('4')"><div class="km">4</div></div>
+    <div class="k" onclick="pd('5')"><div class="km">5</div></div>
+    <div class="k" onclick="pd('6')"><div class="km">6</div></div>
+    <div class="k op" onclick="pk('mul')"><div class="km" style="font-size:28px">&#215;</div></div>
+    <div class="k" onclick="pd('1')"><div class="km">1</div></div>
+    <div class="k" onclick="pd('2')"><div class="km">2</div></div>
+    <div class="k" onclick="pd('3')"><div class="km">3</div></div>
+    <div class="k op" onclick="pk('sub')"><div class="km" style="font-size:30px">&#8722;</div></div>
+    <div class="k wide" onclick="pd('0')"><div class="km">0</div></div>
+    <div class="k" onclick="pd('.')"><div class="km">.</div></div>
+    <div class="k op" onclick="pk('add')"><div class="km" style="font-size:30px">+</div></div>
+  </div>
 
-    <!-- Row 3: 7 8 9 / * DUP -->
-    <div class="k" onclick="pd('7')"><div class="kt"></div><div class="km">7</div><div class="kb"></div></div>
-    <div class="k" onclick="pd('8')"><div class="kt"></div><div class="km">8</div><div class="kb"></div></div>
-    <div class="k" onclick="pd('9')"><div class="kt"></div><div class="km">9</div><div class="kb"></div></div>
-    <div class="k op" onclick="pk('div')"><div class="kt"></div><div class="km" style="font-size:18px">&#247;</div><div class="kb"></div></div>
-    <div class="k op" onclick="pk('mul')"><div class="kt"></div><div class="km" style="font-size:18px">&#215;</div><div class="kb"></div></div>
-    <div class="k" onclick="pk('dup')"><div class="kt">DUPN</div><div class="km">DUP</div><div class="kb">PICK</div></div>
-
-    <!-- Row 4: 4 5 6 - + ROLL | SHIFT key replaces ROLL in shift mode -->
-    <div class="k" onclick="pd('4')"><div class="kt"></div><div class="km">4</div><div class="kb"></div></div>
-    <div class="k" onclick="pd('5')"><div class="kt"></div><div class="km">5</div><div class="kb"></div></div>
-    <div class="k" onclick="pd('6')"><div class="kt"></div><div class="km">6</div><div class="kb"></div></div>
-    <div class="k op" onclick="pk('sub')"><div class="kt"></div><div class="km" style="font-size:19px">&#8722;</div><div class="kb"></div></div>
-    <div class="k op" onclick="pk('add')"><div class="kt"></div><div class="km" style="font-size:19px">+</div><div class="kb"></div></div>
-    <div class="k shiftkey" id="shiftbtn" onclick="toggleShift()"><div class="kt"></div><div class="km">SHIFT</div><div class="kb"></div></div>
-
-    <!-- Row 5: 1 2 3 ENTER(spans 2 rows) -->
-    <div class="k" onclick="pd('1')"><div class="kt"></div><div class="km">1</div><div class="kb"></div></div>
-    <div class="k" onclick="pd('2')"><div class="kt"></div><div class="km">2</div><div class="kb"></div></div>
-    <div class="k" onclick="pd('3')"><div class="kt"></div><div class="km">3</div><div class="kb"></div></div>
-    <div class="k enter" onclick="pk('enter')" style="grid-row: span 2; min-height: auto;">
-      <div class="kt"></div><div class="km" style="font-size:12px;letter-spacing:1px">ENTER</div><div class="kb"></div>
+  <!-- Bottom row (6-col): DUP | SHIFT | ENTER(×3) | ⌫(CLR shift) -->
+  <div class="kgrid-bot" style="margin-top:3px">
+    <div class="k" id="k-dup" onclick="pk('dup')"><div class="kt">DUPN</div><div class="km">DUP</div></div>
+    <div class="k shiftkey" id="shiftbtn" onclick="toggleShift()"><div class="kt"></div><div class="km">SHIFT</div></div>
+    <div class="k enter" onclick="pk('enter')" style="grid-column:span 3">
+      <div class="km" style="font-size:15px;letter-spacing:2px">ENTER</div>
     </div>
+    <div class="k red" id="k-bksp" onclick="pk('bksp')"><div class="kt">CLR</div><div class="km">&#9003;</div></div>
+  </div>
 
-    <!-- Row 6: 0(wide) . BKSP -->
-    <div class="k wide" onclick="pd('0')"><div class="kt"></div><div class="km">0</div><div class="kb"></div></div>
-    <div class="k" onclick="pd('.')"><div class="kt"></div><div class="km">.</div><div class="kb"></div></div>
-    <div class="k red" onclick="pk('bksp')"><div class="kt">CNCL</div><div class="km">&#9003;</div><div class="kb"></div></div>
-
+  <!-- DUPN prompt modal -->
+  <div id="dupnmod" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.88);z-index:100;align-items:center;justify-content:center;border-radius:16px;">
+    <div style="background:#16162a;border:1px solid #3a3a58;border-radius:10px;padding:18px;width:80%;max-width:260px;">
+      <div style="font-size:10px;color:#e8980a;letter-spacing:2px;text-align:center;margin-bottom:12px;font-family:'Courier New',monospace;">DUPN — DUPLICATE N</div>
+      <div style="font-size:10px;color:#777;text-align:center;margin-bottom:10px;font-family:'Courier New',monospace;">How many stack levels to duplicate?</div>
+      <input id="dupn-input" type="number" min="1" max="10" value="2"
+        style="display:block;width:100%;background:#0e0e1e;border:1px solid #5050a0;border-radius:4px;color:#9cd84a;font-family:'Courier New',monospace;font-size:20px;padding:8px;text-align:center;margin-bottom:12px;">
+      <div style="display:flex;gap:6px;">
+        <button onclick="closeDupn(false)" style="flex:1;background:#2a2a2a;border:1px solid #444;color:#888;font-family:'Courier New',monospace;font-size:11px;padding:8px;border-radius:5px;cursor:pointer;">CANCEL</button>
+        <button onclick="closeDupn(true)" style="flex:1;background:#12304a;border:1px solid #204a6a;color:#cce0f0;font-family:'Courier New',monospace;font-size:11px;padding:8px;border-radius:5px;cursor:pointer;">OK</button>
+      </div>
+    </div>
   </div>
 
   <!-- Equation modal -->
@@ -304,21 +321,23 @@ var pendVal = null;
 var varMode = 'sto';
 var vars = {};
 var degMode = false;
+var engMode = false;
 
 // Keys that have a shift function: key-id -> [normal-fn, shift-fn, shift-label]
 var shiftMap = {
-  'k-sqrt': ['sqrt', 'sq',   'x\u00b2'],
-  'k-log':  ['log',  'pow10','10^x'],
-  'k-ln':   ['ln',   'exp',  'e^x'],
-  'k-sin':  ['sin',  'asin', 'ASIN'],
-  'k-cos':  ['cos',  'acos', 'ACOS'],
-  'k-tan':  ['tan',  'atan', 'ATAN'],
-  'k-inv':  ['inv',  'pow',  'y^x'],
-  'k-pi':   ['pi',   'intg', '\u222b'],
-  'k-swap': ['swap', 'over', 'OVER'],
-  'k-chs':  ['chs',  'abs',  'ABS'],
-  'k-eex':  ['eex',  'eng',  'ENG'],
-  'k-drop': ['drop', 'clrstk','CLR'],
+  'k-sqrt':  ['sqrt',  'sq',      'x\u00b2'],
+  'k-log':   ['log',   'pow10',   '10^x'],
+  'k-ln':    ['ln',    'exp',     'e^x'],
+  'k-yroot': ['yroot', 'pow',     'y^x'],
+  'k-sin':   ['sin',   'asin',    'ASIN'],
+  'k-cos':   ['cos',   'acos',    'ACOS'],
+  'k-tan':   ['tan',   'atan',    'ATAN'],
+  'k-inv':   ['inv',   'inv',     '1/x'],
+  'k-swap':  ['swap',  'over',    'OVER'],
+  'k-chs':   ['chs',   'abs',     'ABS'],
+  'k-eex':   ['eex',   'togeng',  'ENG'],
+  'k-bksp':  ['bksp',  'clrstk',  'CLR'],
+  'k-dup':   ['dup',   'dupn',    'DUPN'],
 };
 
 function fmt(n) {
@@ -326,8 +345,27 @@ function fmt(n) {
   if (isNaN(n)) return 'NaN';
   var a = Math.abs(n);
   if (a === 0) return '0';
+  if (engMode && a !== 0) {
+    // Engineering notation: exponent is multiple of 3
+    var exp = Math.floor(Math.log10(a));
+    var engExp = Math.floor(exp / 3) * 3;
+    var mantissa = n / Math.pow(10, engExp);
+    var m = parseFloat(mantissa.toPrecision(7));
+    if (engExp === 0) return String(m);
+    return m + 'E' + engExp;
+  }
   if (a >= 1e-4 && a < 1e12) return String(parseFloat(n.toPrecision(10)));
   return n.toExponential(6).replace(/e\+?(-?)0*(\d+)/, 'E$1$2');
+}
+
+function vibro(el) {
+  try { if (navigator.vibrate) navigator.vibrate(18); } catch(e) {}
+  try {
+    if (el && el.classList) {
+      el.classList.add('flash');
+      setTimeout(function(){ if (el && el.classList) el.classList.remove('flash'); }, 100);
+    }
+  } catch(e) {}
 }
 
 function render() {
@@ -375,13 +413,13 @@ function toggleShift() {
     if (shifted) {
       el.classList.add('shift-active');
       // Swap the displayed main label to the shift label
-      el.querySelector('.km').setAttribute('data-orig', el.querySelector('.km').textContent);
+      el.querySelector('.km').setAttribute('data-orig', el.querySelector('.km').innerHTML);
       el.querySelector('.km').textContent = shiftMap[id][2];
       el.querySelector('.km').style.color = 'var(--amber)';
     } else {
       el.classList.remove('shift-active');
       var orig = el.querySelector('.km').getAttribute('data-orig');
-      if (orig) el.querySelector('.km').textContent = orig;
+      if (orig) el.querySelector('.km').innerHTML = orig;
       el.querySelector('.km').style.color = '';
     }
   }
@@ -389,6 +427,7 @@ function toggleShift() {
 
 // ── Digit input ────────────────────────────────────────
 function pd(d) {
+  vibro(null);
   if (shifted) { toggleShift(); } // digits cancel shift
   if (d === '.' && buf.replace(/E.*/,'').indexOf('.') !== -1) return;
   if (d === '.' && eex) return;
@@ -403,6 +442,7 @@ function pd(d) {
 
 // ── Main key handler ───────────────────────────────────
 function pk(k) {
+  vibro(null);
   // If shift is on, remap key
   if (shifted) {
     for (var id in shiftMap) {
@@ -426,6 +466,12 @@ function pk(k) {
     case 'drop':  if (buf !== '') { buf = ''; eex = false; } else if (stk.length > 0) stk.pop(); break;
     case 'clrstk': stk = []; buf = ''; eex = false; toast('STACK CLEARED','info'); break;
     case 'dup':   if (buf !== '') pushBuf(); if (need(1)) stk.push(stk[stk.length-1]); break;
+    case 'dupn':
+      if (buf !== '') pushBuf();
+      document.getElementById('dupnmod').style.display = 'flex';
+      document.getElementById('dupn-input').value = '2';
+      setTimeout(function(){ document.getElementById('dupn-input').focus(); }, 100);
+      return;
     case 'swap':  if (buf !== '') pushBuf(); if (need(2)) { var a=stk.pop(),b=stk.pop(); stk.push(a); stk.push(b); } break;
     case 'over':  if (buf !== '') pushBuf(); if (need(2)) stk.push(stk[stk.length-2]); break;
     case 'roll':  if (buf !== '') pushBuf(); if (need(2)) { var x=stk.shift(); stk.push(x); } break;
@@ -434,6 +480,17 @@ function pk(k) {
     case 'mul':   bop(function(a,b){return a*b;}); break;
     case 'div':   bop(function(a,b){ if(b===0){toast('DIV BY ZERO');return null;} return a/b; }); break;
     case 'pow':   bop(function(a,b){ return Math.pow(a,b); }); break;
+    case 'yroot':
+      if (buf !== '') pushBuf();
+      if (!need(2)) return;
+      (function(){
+        var x=stk[stk.length-1], y=stk[stk.length-2];
+        if (x===0){toast('DIV BY ZERO');return;}
+        var r=Math.pow(y,1/x);
+        if (!isFinite(r)){toast('DOMAIN ERR');return;}
+        stk.pop(); stk.pop(); stk.push(r);
+      })();
+      break;
     case 'sqrt':  uop(function(x){ if(x<0){toast('NEG SQRT');return null;} return Math.sqrt(x); }); break;
     case 'sq':    uop(function(x){ return x*x; }); break;
     case 'log':   uop(function(x){ if(x<=0){toast('DOMAIN ERR');return null;} return Math.log10(x); }); break;
@@ -466,8 +523,17 @@ function pk(k) {
       if (buf === '' || buf === '-') buf = buf + '1';
       if (buf.indexOf('E') === -1) { buf += 'E'; eex = true; }
       break;
-    case 'eng': // toggle ENG display - just a toast for now
-      toast('ENG MODE N/A','info'); break;
+    case 'togeng':
+      engMode = !engMode;
+      var engBtn = document.getElementById('k-eex');
+      if (engBtn) {
+        engBtn.querySelector('.kt').style.color = engMode ? 'var(--amber)' : '';
+        engBtn.querySelector('.kt').style.fontWeight = engMode ? 'bold' : '';
+      }
+      toast(engMode ? 'ENG MODE ON' : 'ENG MODE OFF', 'info');
+      break;
+    case 'eng':
+      break; // handled by togeng now
   }
   render();
 }
@@ -543,11 +609,11 @@ function calcPar() {
   if (buf !== '') pushBuf();
   if (!need(2)) return;
   var R2=stk[stk.length-1], R1=stk[stk.length-2];
-  if (R1<=0||R2<=0) { showEq('PARALLEL RESISTORS','R\u2016 = R1R2/(R1+R2)','<b>Error:</b> both R must be &gt; 0',null); return; }
-  stk.pop(); stk.pop(); render();
-  showEq('PARALLEL RESISTORS','R\u2016 = (R1 \u00d7 R2) / (R1 + R2)',
-    'Level 2 (R1): <b>'+fmt(R1)+' \u03a9</b><br>Level 1 (R2): <b>'+fmt(R2)+' \u03a9</b>',
-    (R1*R2)/(R1+R2));
+  if (R1<=0||R2<=0) { toast('R MUST BE > 0'); return; }
+  stk.pop(); stk.pop();
+  stk.push((R1*R2)/(R1+R2));
+  toast('R\u2016 = '+fmt(stk[stk.length-1])+' \u03a9', 'info');
+  render();
 }
 
 // ── Variable storage ───────────────────────────────────
@@ -604,6 +670,20 @@ function clickVar(name) {
 }
 
 function delVar(name) { delete vars[name]; renderVars(); }
+
+// ── DUPN modal ────────────────────────────────────────
+function closeDupn(doIt) {
+  var mod = document.getElementById('dupnmod');
+  mod.style.display = 'none';
+  if (!doIt) return;
+  var n = parseInt(document.getElementById('dupn-input').value, 10);
+  if (isNaN(n) || n < 1) { toast('ENTER A NUMBER'); return; }
+  if (stk.length < n) { toast('TOO FEW ARGS'); return; }
+  var slice = stk.slice(stk.length - n);
+  for (var i = 0; i < n; i++) stk.push(slice[i]);
+  toast('DUPED ' + n + ' LEVEL' + (n>1?'S':''), 'info');
+  render();
+}
 
 // ── RAD/DEG toggle ────────────────────────────────────
 function toggleDeg() {
